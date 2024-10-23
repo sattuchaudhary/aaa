@@ -9,6 +9,10 @@ const morgan = require('morgan');
 const Product = require('./models/Product');
 const admin = require('./config/firebase');
 
+// Connect to MongoDB
+
+
+
 
 
 dotenv.config();
@@ -21,7 +25,7 @@ app.use(cors());
 app.use(morgan('dev'));
 
 // Connect to MongoDB
-mongoose.connect(process.env.MONGODB_URI, {
+mongoose.connect(process.env.MONGODB_URI || "local_mongodb_uri", {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 })
