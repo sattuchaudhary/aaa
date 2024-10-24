@@ -16,120 +16,51 @@ const generateToken = (id) => {
 };
 
 // Generate OTP
-// const generateOTP = () => {
-//     return Math.floor(100000 + Math.random() * 900000).toString();
-// };
+const generateOTP = () => {
+    return Math.floor(100000 + Math.random() * 900000).toString();
+};
 
-// Send OTP Controller
-// exports.sendOTP = async (req, res) => {
-//     try {
-//         const { mobileNumber } = req.body;
+//Send OTP Controller
+exports.sendOTP = async (req, res) => {
+    try {
+        const { mobileNumber } = req.body;
 
-//         if (!mobileNumber || !/^[6-9]\d{9}$/.test(mobileNumber)) {
-//             return res.status(400).json({
-//                 success: false,
-//                 message: 'Please provide a valid Indian mobile number'
-//             });
-//         }
+        if (!mobileNumber || !/^[6-9]\d{9}$/.test(mobileNumber)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Please provide a valid Indian mobile number'
+            });
+        }
 
-//         await OTP.deleteMany({ mobileNumber });
+        await OTP.deleteMany({ mobileNumber });
 
-//         const otp = generateOTP();
-//         await OTP.create({
-//             mobileNumber,
-//             otp,
-//             createdAt: new Date()
-//         });
+        const otp = generateOTP();
+        await OTP.create({
+            mobileNumber,
+            otp,
+            createdAt: new Date()
+        });
 
-//         if (process.env.NODE_ENV === 'development') {
-//             console.log(`OTP for ${mobileNumber}: ${otp}`);
-//         }
+        if (process.env.NODE_ENV === 'development') {
+            console.log(`OTP for ${mobileNumber}: ${otp}`);
+        }
 
-//         res.status(200).json({
-//             success: true,
-//             message: 'OTP sent successfully',
-//             otp: process.env.NODE_ENV === 'development' ? otp : undefined
-//         });
+        res.status(200).json({
+            success: true,
+            message: 'OTP sent successfully',
+            otp: process.env.NODE_ENV === 'development' ? otp : undefined
+        });
 
-//     } catch (error) {
-//         console.error('Send OTP Error:', error);
-//         res.status(500).json({
-//             success: false,
-//             message: 'Error sending OTP',
-//             error: process.env.NODE_ENV === 'development' ? error.message : undefined
-//         });
-//     }
-// };
+    } catch (error) {
+        console.error('Send OTP Error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error sending OTP',
+            error: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
+    }
+};
 
-
-
-// ---------------------------------------------------------------------------------------------------------------------------------------
-
-
-
-// exports.sendOTP = async (req, res) => {
-//     try {
-//         const { mobileNumber } = req.body;
-
-//         if (!mobileNumber || !/^[6-9]\d{9}$/.test(mobileNumber)) {
-//             return res.status(400).json({
-//                 success: false,
-//                 message: 'Please provide a valid Indian mobile number'
-//             });
-//         }
-
-//         // Delete any existing OTP for this number
-//         await OTP.deleteMany({ mobileNumber });
-
-//         // Generate a verification code (6 digits)
-//         const otp = Math.floor(100000 + Math.random() * 900000).toString();
-
-        
-
-//         // Save OTP in database
-//         await OTP.create({
-//             mobileNumber,
-//             otp,
-//             createdAt: new Date()
-//         });
-
-//         // Format phone number for Firebase (add country code)
-//         const phoneNumber = `+91${mobileNumber}`; // Adding Indian country code
-
-//         try {
-//             // Send OTP via Firebase
-//             const message = {
-//                 phoneNumber,
-//                 payload: {
-//                     notification: {
-//                         title: 'Your OTP',
-//                         body: `Your verification code is: ${otp}`
-//                     }
-//                 }
-//             };
-
-//             await admin.messaging().send(message);
-
-//             res.status(200).json({
-//                 success: true,
-//                 message: 'OTP sent successfully'
-//             });
-//         } catch (firebaseError) {
-//             console.error('Firebase Error:', firebaseError);
-//             res.status(500).json({
-//                 success: false,
-//                 message: 'Error sending OTP via Firebase'
-//             });
-//         }
-
-//     } catch (error) {
-//         console.error('Send OTP Error:', error);
-//         res.status(500).json({
-//             success: false,
-//             message: 'Error sending OTP'
-//         });
-//     }
-// };
 
 
 // ---------------------------------------------------------------------------------------------------------------------------------------
@@ -147,72 +78,47 @@ exports.sendOTP = async (req, res) => {
             });
         }
 
-        // Delete any existing OTP
+        // Delete any existing OTP for this number
         await OTP.deleteMany({ mobileNumber });
 
-        // Generate OTP
+        // Generate a verification code (6 digits)
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
+        
+
+        // Save OTP in database
+        await OTP.create({
+            mobileNumber,
+            otp,
+            createdAt: new Date()
+        });
+
+        // Format phone number for Firebase (add country code)
+        const phoneNumber = `+91${mobileNumber}`; // Adding Indian country code
+
         try {
-            // Create a new reCAPTCHA verification
-            const phoneNumber = `+91${mobileNumber}`;
-            
-            // Create authentication settings
-            const settings = {
-                phoneNumber: phoneNumber,
-                recaptchaToken: 'your-recaptcha-token' // This will come from frontend
+            // Send OTP via Firebase
+            const message = {
+                phoneNumber,
+                payload: {
+                    notification: {
+                        title: 'Your OTP',
+                        body: `Your verification code is: ${otp}`
+                    }
+                }
             };
 
-            // Create custom token for authentication
-            const customToken = await admin.auth().createCustomToken(phoneNumber);
+            await admin.messaging().send(message);
 
-            // Save OTP in database
-            await OTP.create({
-                mobileNumber,
-                otp,
-                createdAt: new Date()
-            });
-
-            // For development environment
-            if (process.env.NODE_ENV === 'development') {
-                return res.status(200).json({
-                    success: true,
-                    message: 'OTP sent successfully (Development Mode)',
-                    otp: otp,
-                    token: customToken
-                });
-            }
-
-            // For production
             res.status(200).json({
                 success: true,
-                message: 'OTP sent successfully',
-                token: customToken
+                message: 'OTP sent successfully'
             });
-
         } catch (firebaseError) {
             console.error('Firebase Error:', firebaseError);
-            
-            // Specific error handling
-            if (firebaseError.code === 'auth/invalid-phone-number') {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Invalid phone number format'
-                });
-            }
-
-            if (firebaseError.code === 'auth/invalid-recipient') {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Phone number is not valid or not supported'
-                });
-            }
-
-            // Generic error
             res.status(500).json({
                 success: false,
-                message: 'Error sending OTP via Firebase',
-                error: process.env.NODE_ENV === 'development' ? firebaseError.message : undefined
+                message: 'Error sending OTP via Firebase'
             });
         }
 
@@ -220,60 +126,154 @@ exports.sendOTP = async (req, res) => {
         console.error('Send OTP Error:', error);
         res.status(500).json({
             success: false,
-            message: 'Error sending OTP',
-            error: process.env.NODE_ENV === 'development' ? error.message : undefined
+            message: 'Error sending OTP'
         });
     }
 };
 
 
-// 3. Create a new verifyOTP function:
-exports.verifyOTP = async (req, res) => {
-    try {
-        const { mobileNumber, otp } = req.body;
+// ---------------------------------------------------------------------------------------------------------------------------------------
 
-        // Find the latest OTP for this number
-        const otpRecord = await OTP.findOne({
-            mobileNumber,
-            otp
-        }).sort({ createdAt: -1 });
 
-        if (!otpRecord) {
-            return res.status(400).json({
-                success: false,
-                message: 'Invalid OTP'
-            });
-        }
 
-        // Check if OTP is expired (5 minutes)
-        const now = new Date();
-        const otpTime = new Date(otpRecord.createdAt);
-        const diffMinutes = (now - otpTime) / (1000 * 60);
+// exports.sendOTP = async (req, res) => {
+//     try {
+//         const { mobileNumber } = req.body;
 
-        if (diffMinutes > 5) {
-            await OTP.deleteOne({ _id: otpRecord._id });
-            return res.status(400).json({
-                success: false,
-                message: 'OTP has expired'
-            });
-        }
+//         if (!mobileNumber || !/^[6-9]\d{9}$/.test(mobileNumber)) {
+//             return res.status(400).json({
+//                 success: false,
+//                 message: 'Please provide a valid Indian mobile number'
+//             });
+//         }
 
-        // Delete used OTP
-        await OTP.deleteOne({ _id: otpRecord._id });
+//         // Delete any existing OTP
+//         await OTP.deleteMany({ mobileNumber });
 
-        res.status(200).json({
-            success: true,
-            message: 'OTP verified successfully'
-        });
+//         // Generate OTP
+//         const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
-    } catch (error) {
-        console.error('Verify OTP Error:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error verifying OTP'
-        });
-    }
-};
+//         try {
+//             // Create a new reCAPTCHA verification
+//             const phoneNumber = `+91${mobileNumber}`;
+            
+//             // Create authentication settings
+//             const settings = {
+//                 phoneNumber: phoneNumber,
+//                 recaptchaToken: 'your-recaptcha-token' // This will come from frontend
+//             };
+
+//             // Create custom token for authentication
+//             const customToken = await admin.auth().createCustomToken(phoneNumber);
+
+//             // Save OTP in database
+//             await OTP.create({
+//                 mobileNumber,
+//                 otp,
+//                 createdAt: new Date()
+//             });
+
+//             // For development environment
+//             if (process.env.NODE_ENV === 'development') {
+//                 return res.status(200).json({
+//                     success: true,
+//                     message: 'OTP sent successfully (Development Mode)',
+//                     otp: otp,
+//                     token: customToken
+//                 });
+//             }
+
+//             // For production
+//             res.status(200).json({
+//                 success: true,
+//                 message: 'OTP sent successfully',
+//                 token: customToken
+//             });
+
+//         } catch (firebaseError) {
+//             console.error('Firebase Error:', firebaseError);
+            
+//             // Specific error handling
+//             if (firebaseError.code === 'auth/invalid-phone-number') {
+//                 return res.status(400).json({
+//                     success: false,
+//                     message: 'Invalid phone number format'
+//                 });
+//             }
+
+//             if (firebaseError.code === 'auth/invalid-recipient') {
+//                 return res.status(400).json({
+//                     success: false,
+//                     message: 'Phone number is not valid or not supported'
+//                 });
+//             }
+
+//             // Generic error
+//             res.status(500).json({
+//                 success: false,
+//                 message: 'Error sending OTP via Firebase',
+//                 error: process.env.NODE_ENV === 'development' ? firebaseError.message : undefined
+//             });
+//         }
+
+//     } catch (error) {
+//         console.error('Send OTP Error:', error);
+//         res.status(500).json({
+//             success: false,
+//             message: 'Error sending OTP',
+//             error: process.env.NODE_ENV === 'development' ? error.message : undefined
+//         });
+//     }
+// };
+
+
+// // 3. Create a new verifyOTP function:
+// exports.verifyOTP = async (req, res) => {
+//     try {
+//         const { mobileNumber, otp } = req.body;
+
+//         // Find the latest OTP for this number
+//         const otpRecord = await OTP.findOne({
+//             mobileNumber,
+//             otp
+//         }).sort({ createdAt: -1 });
+
+//         if (!otpRecord) {
+//             return res.status(400).json({
+//                 success: false,
+//                 message: 'Invalid OTP'
+//             });
+//         }
+
+//         // Check if OTP is expired (5 minutes)
+//         const now = new Date();
+//         const otpTime = new Date(otpRecord.createdAt);
+//         const diffMinutes = (now - otpTime) / (1000 * 60);
+
+//         if (diffMinutes > 5) {
+//             await OTP.deleteOne({ _id: otpRecord._id });
+//             return res.status(400).json({
+//                 success: false,
+//                 message: 'OTP has expired'
+//             });
+//         }
+
+//         // Delete used OTP
+//         await OTP.deleteOne({ _id: otpRecord._id });
+
+//         res.status(200).json({
+//             success: true,
+//             message: 'OTP verified successfully'
+//         });
+
+//     } catch (error) {
+//         console.error('Verify OTP Error:', error);
+//         res.status(500).json({
+//             success: false,
+//             message: 'Error verifying OTP'
+//         });
+//     }
+// };
 
 
 // Register Controller
@@ -567,54 +567,6 @@ exports.updateAccountStats = async (req, res) => {
 // Add these new controller functions:
 
 // Add these new controller functions
-// exports.sendForgotPasswordOTP = async (req, res) => {
-//     try {
-//         const { mobileNumber } = req.body;
-
-//         if (!mobileNumber || !/^[6-9]\d{9}$/.test(mobileNumber)) {
-//             return res.status(400).json({
-//                 success: false,
-//                 message: 'Please provide a valid Indian mobile number'
-//             });
-//         }
-
-//         // Check if user exists
-//         const user = await User.findOne({ mobileNumber });
-//         if (!user) {
-//             return res.status(404).json({
-//                 success: false,
-//                 message: 'User not found'
-//             });
-//         }
-
-//         await OTP.deleteMany({ mobileNumber });
-
-//         const otp = Math.floor(100000 + Math.random() * 900000).toString();
-//         await OTP.create({
-//             mobileNumber,
-//             otp,
-//             createdAt: new Date()
-//         });
-
-//         if (process.env.NODE_ENV === 'development') {
-//             console.log(`OTP for ${mobileNumber}: ${otp}`);
-//         }
-
-//         res.status(200).json({
-//             success: true,
-//             message: 'OTP sent successfully',
-//             otp: process.env.NODE_ENV === 'development' ? otp : undefined
-//         });
-
-//     } catch (error) {
-//         console.error('Send Forgot Password OTP Error:', error);
-//         res.status(500).json({
-//             success: false,
-//             message: 'Error sending OTP'
-//         });
-//     }
-// };
-
 exports.sendForgotPasswordOTP = async (req, res) => {
     try {
         const { mobileNumber } = req.body;
@@ -626,6 +578,7 @@ exports.sendForgotPasswordOTP = async (req, res) => {
             });
         }
 
+        // Check if user exists
         const user = await User.findOne({ mobileNumber });
         if (!user) {
             return res.status(404).json({
@@ -637,40 +590,21 @@ exports.sendForgotPasswordOTP = async (req, res) => {
         await OTP.deleteMany({ mobileNumber });
 
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
-        
         await OTP.create({
             mobileNumber,
             otp,
             createdAt: new Date()
         });
 
-        // Format phone number for Firebase
-        const phoneNumber = `+91${mobileNumber}`;
-
-        try {
-            const message = {
-                phoneNumber,
-                payload: {
-                    notification: {
-                        title: 'Password Reset OTP',
-                        body: `Your password reset code is: ${otp}`
-                    }
-                }
-            };
-
-            await admin.messaging().send(message);
-
-            res.status(200).json({
-                success: true,
-                message: 'Password reset OTP sent successfully'
-            });
-        } catch (firebaseError) {
-            console.error('Firebase Error:', firebaseError);
-            res.status(500).json({
-                success: false,
-                message: 'Error sending OTP via Firebase'
-            });
+        if (process.env.NODE_ENV === 'development') {
+            console.log(`OTP for ${mobileNumber}: ${otp}`);
         }
+
+        res.status(200).json({
+            success: true,
+            message: 'OTP sent successfully',
+            otp: process.env.NODE_ENV === 'development' ? otp : undefined
+        });
 
     } catch (error) {
         console.error('Send Forgot Password OTP Error:', error);
@@ -680,6 +614,72 @@ exports.sendForgotPasswordOTP = async (req, res) => {
         });
     }
 };
+
+// exports.sendForgotPasswordOTP = async (req, res) => {
+//     try {
+//         const { mobileNumber } = req.body;
+
+//         if (!mobileNumber || !/^[6-9]\d{9}$/.test(mobileNumber)) {
+//             return res.status(400).json({
+//                 success: false,
+//                 message: 'Please provide a valid Indian mobile number'
+//             });
+//         }
+
+//         const user = await User.findOne({ mobileNumber });
+//         if (!user) {
+//             return res.status(404).json({
+//                 success: false,
+//                 message: 'User not found'
+//             });
+//         }
+
+//         await OTP.deleteMany({ mobileNumber });
+
+//         const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        
+//         await OTP.create({
+//             mobileNumber,
+//             otp,
+//             createdAt: new Date()
+//         });
+
+//         // Format phone number for Firebase
+//         const phoneNumber = `+91${mobileNumber}`;
+
+//         try {
+//             const message = {
+//                 phoneNumber,
+//                 payload: {
+//                     notification: {
+//                         title: 'Password Reset OTP',
+//                         body: `Your password reset code is: ${otp}`
+//                     }
+//                 }
+//             };
+
+//             await admin.messaging().send(message);
+
+//             res.status(200).json({
+//                 success: true,
+//                 message: 'Password reset OTP sent successfully'
+//             });
+//         } catch (firebaseError) {
+//             console.error('Firebase Error:', firebaseError);
+//             res.status(500).json({
+//                 success: false,
+//                 message: 'Error sending OTP via Firebase'
+//             });
+//         }
+
+//     } catch (error) {
+//         console.error('Send Forgot Password OTP Error:', error);
+//         res.status(500).json({
+//             success: false,
+//             message: 'Error sending OTP'
+//         });
+//     }
+// };
 
 exports.resetPassword = async (req, res) => {
     try {
