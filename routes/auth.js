@@ -16,7 +16,7 @@ const {
     resetPassword,
     sendForgotPasswordOTP,
     updateAccountStats,
-    verifyOTP
+    
     
 } = require('../controllers/authController');
 const { protect } = require('../middleware/auth');
@@ -43,7 +43,7 @@ router.put('/account-stats', protect, updateAccountStats);
 router.post('/forgot-password/send-otp', sendForgotPasswordOTP);
 router.post('/forgot-password/reset', resetPassword);
 // In your routes/auth.js
-router.post('/verify-otp', verifyOTP);
+// router.post('/verify-otp', verifyOTP);
 
 module.exports = router;
 
