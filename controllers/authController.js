@@ -306,17 +306,17 @@ exports.register = async (req, res) => {
         }
 
         // Verify OTP
-        // const otpRecord = await OTP.findOne({
-        //     mobileNumber,
-        //     otp
-        // }).sort({ createdAt: -1 });
+        const otpRecord = await OTP.findOne({
+             mobileNumber,
+             otp
+         }).sort({ createdAt: -1 });
 
-        // if (!otpRecord) {
-        //     return res.status(400).json({
-        //         success: false,
-        //         message: 'Invalid OTP'
-        //     });
-        // }
+         if (!otpRecord) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid OTP'
+            });
+        }
 
                 // Handle referral code
                 let referredBy = null;
